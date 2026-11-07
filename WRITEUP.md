@@ -6,6 +6,8 @@ is recorded in a tamper-evident audit trail.
 
 ## 1. How to run it
 
+Live demo: https://jasonmarks22.github.io/doc-signing-app/ (auto-deployed by GitHub Actions on every push to `main`).
+
 Requires Node 20+.
 
 ```bash
