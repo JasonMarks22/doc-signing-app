@@ -1,5 +1,8 @@
 import type { SourceDocument } from './types';
 
+// BASE_URL is "/" locally and "/doc-signing-app/" on GitHub Pages (see vite.config.ts).
+const BASE = `${import.meta.env.BASE_URL}documents/master-agreement`;
+
 /**
  * Source documents the sender can pick from. Pages are pre-rendered PNGs of the PDF
  * (`pdftoppm -r 150`), so the browser just shows images and there is no PDF.js worker to
@@ -9,10 +12,10 @@ export const SOURCE_DOCUMENTS: SourceDocument[] = [
   {
     id: 'master-agreement',
     name: 'Master Agreement for Products and Services',
-    pdfUrl: '/documents/master-agreement/master-agreement.pdf',
+    pdfUrl: `${BASE}/master-agreement.pdf`,
     pages: [
-      { imageUrl: '/documents/master-agreement/page-1.png', width: 612, height: 792 },
-      { imageUrl: '/documents/master-agreement/page-2.png', width: 612, height: 792 },
+      { imageUrl: `${BASE}/page-1.png`, width: 612, height: 792 },
+      { imageUrl: `${BASE}/page-2.png`, width: 612, height: 792 },
     ],
   },
 ];
