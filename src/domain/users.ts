@@ -28,3 +28,7 @@ export const USERS: User[] = [
 export function findUser(id: string): User | undefined {
   return USERS.find((u) => u.id === id);
 }
+
+export function findUserByEmail(email: string): User | undefined {
+  return USERS.find((u) => u.email.toLowerCase() === email.toLowerCase());
+}

@@ -55,7 +55,7 @@ hash-chained audit trail.
   are detected.
 
 **Multi-user demo in one browser**
-- Switch accounts from the "Acting as" menu in the header.
+- Switch people from the "You are" menu in the header, or with the one-click button after sending.
 - Open two tabs as different users and they stay in sync through the browser's `storage` event.
 - Documents and the audit trail persist across page refreshes.
 
@@ -90,17 +90,33 @@ The app comes with three simulated accounts:
 | Dana Whitfield | Acme Freight Co. | Recipient |
 | Sam Okafor | Bluebonnet Logistics | Unrelated user |
 
-1. **As Alex**, select **Create draft**, then **Load standard layout**.
-2. Open **2. Fill your fields & send**, click the sender signature field to sign, and enter a
-   title.
-3. Choose **Dana Whitfield** as the recipient and select **Sign & send**.
-4. **Switch to Dana** in the header and open the document.
-5. Complete the Customer Information fields, sign, and select **Finish & sign**.
-6. **Switch to Sam** to confirm the document isn't visible to that account.
-7. **Switch back to Alex or Dana** and check the audit trail on the document screen.
+"Sending" is simulated, as the brief allows: no real email leaves the browser. When you send, the
+document appears in the recipient's list, and you switch to that person to act as them.
 
-To see tamper detection, open DevTools, edit an entry's `summary` in the
-`docsign:audit:v1` localStorage key, and refresh. The audit panel reports the broken entry.
+1. **As Alex**, select **Start new agreement**, then **Use standard layout**.
+2. Select **Next: sign & send**, click the sender signature field to sign, and enter a title.
+3. Leave **Dana Whitfield** as the recipient and select **Sign & send to Dana Whitfield**.
+4. Select **Switch to Dana Whitfield to sign**.
+5. Complete the highlighted fields, sign, and select **Finish & sign**.
+6. **Switch to Sam** using "You are" at the top right. The document isn't visible to that account.
+7. **Switch back to Alex or Dana** and expand **Audit trail** below the document.
+
+### How each requirement can be tested
+
+| Requirement | How to check it |
+|---|---|
+| Place fields | In a new agreement, choose **Text**, click the page, then edit its label, type, assignee and required flag. |
+| Field types | Add each of the six types from the **Add a field** palette. |
+| Positions survive resizing | Narrow the browser window. Fields stay in place on the page. |
+| Target layout | **Use standard layout** recreates the sample's 17 fields. |
+| Sender signs before sending | Select **Sign & send** with fields empty. The app stops at the first missing field. |
+| Locked after sending | As the sender, reopen a sent document. No field can be edited. |
+| Recipient edits only their fields | As Dana, only the highlighted fields accept input. |
+| Validation | As Dana, enter `bad` in Email and select **Finish & sign**. The document stays unsigned. |
+| Auto-fill and completion | After finishing, Print Name and Date are filled in and the document is locked. |
+| Statuses and document list | The home page shows `draft`, `sent` or `completed` for each document. |
+| Users see only their documents | Sam's list stays empty. Dana can't see Alex's drafts. |
+| Audit trail | Open DevTools, edit an entry's `summary` in the `docsign:audit:v1` localStorage key, and refresh. The panel opens and reports the broken entry. |
 
 ## How it works
 
@@ -170,8 +186,10 @@ GitHub Pages.
   version would enforce these rules on a server and store or sign the chain head there.
 - **Documents:** only the bundled Master Agreement is available; PDF upload isn't supported, and
   signed PDFs can't be downloaded.
+- **Sending:** delivery is simulated, and recipients are chosen from the demo accounts so that a
+  sent document always reaches someone who can open it. Real email would need a backend.
 - **Workflow:** one sender and one recipient per document, with no decline, void, expiry or
-  reminder options. Titles can't be edited after creation, and drafts can't be deleted.
+  reminder options. Documents take their source document's name, and drafts can't be deleted.
 - **Editor:** fields are placed by clicking, with no palette dragging, snapping, undo or keyboard
   support.
 - **Audit coverage:** layout edits made during drafting aren't logged.

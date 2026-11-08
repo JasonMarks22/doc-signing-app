@@ -16,9 +16,13 @@ export default function App() {
         <button className="brand" onClick={() => navigate({ name: 'list' })}>
           ✍ MiniSign
         </button>
-        {pending > 0 && <span className="pending">{pending} need your action</span>}
+        {pending > 0 && (
+          <span className="pending">
+            {pending} {pending === 1 ? 'needs' : 'need'} your action
+          </span>
+        )}
         <label className="user-switcher">
-          Acting as
+          You are
           <select value={currentUser.id} onChange={(e) => switchUser(e.target.value)}>
             {USERS.map((u) => (
               <option key={u.id} value={u.id}>

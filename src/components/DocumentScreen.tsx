@@ -56,13 +56,28 @@ export function DocumentScreen({ id }: { id: string }) {
           <button className={step === 'layout' ? 'active' : ''} onClick={() => setStep('layout')}>
             1. Place fields
           </button>
-          <button className={step === 'fill' ? 'active' : ''} onClick={() => setStep('fill')}>
-            2. Fill your fields & send
+          <span aria-hidden="true">→</span>
+          <button
+            className={step === 'fill' ? 'active' : ''}
+            disabled={doc.fields.length === 0}
+            onClick={() => setStep('fill')}
+          >
+            2. Sign & send
           </button>
         </div>
       )}
 
-      {isDraftSender && step === 'layout' ? <LayoutEditor doc={doc} /> : <FillView doc={doc} />}
+      {isDraftSender && step === 'layout' ? (
+        <LayoutEditor
+          doc={doc}
+          onContinue={() => {
+            setStep('fill');
+            window.scrollTo(0, 0);
+          }}
+        />
+      ) : (
+        <FillView doc={doc} />
+      )}
 
       <AuditPanel doc={doc} />
     </div>

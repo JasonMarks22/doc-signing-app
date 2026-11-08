@@ -37,8 +37,13 @@ input, select { border: 1px solid var(--border); border-radius: 6px; padding: 6p
 
 /* List */
 .list-screen section { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 16px; }
-.new-doc form { display: flex; gap: 8px; flex-wrap: wrap; }
-.new-doc input { flex: 1; min-width: 220px; }
+.intro h2 { font-size: 1.4em; }
+.how-steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 12px 0; padding: 0; list-style: none; counter-reset: step; }
+.how-steps li { counter-increment: step; display: flex; flex-direction: column; gap: 2px; padding: 12px; background: #f9fafb; border-radius: 8px; font-size: 0.95em; }
+.how-steps strong::before { content: counter(step) '. '; }
+.how-steps span { color: var(--muted); }
+.new-doc { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.new-doc label { display: flex; gap: 8px; align-items: center; }
 .doc-table { width: 100%; border-collapse: collapse; }
 .doc-table th, .doc-table td { text-align: left; padding: 8px; border-bottom: 1px solid #eaecf0; }
 .doc-table tbody tr { cursor: pointer; }
@@ -53,7 +58,7 @@ input, select { border: 1px solid var(--border); border-radius: 6px; padding: 6p
 .doc-header { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 12px; }
 .doc-header h2 { margin: 0; }
 .doc-header .meta { color: var(--muted); font-size: 0.9em; }
-.steps { display: flex; gap: 8px; margin-bottom: 12px; }
+.steps { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; color: var(--muted); }
 .steps button.active, .tabs button.active, .palette button.active { background: #1d4ed8; color: #fff; border-color: #1d4ed8; }
 .workspace { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 16px; align-items: start; }
 @media (max-width: 900px) { .workspace { grid-template-columns: 1fr; } }
@@ -61,20 +66,22 @@ input, select { border: 1px solid var(--border); border-radius: 6px; padding: 6p
 .sidebar { position: sticky; top: 12px; display: flex; flex-direction: column; gap: 12px; }
 .sidebar section, .audit { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
 .audit { margin-top: 16px; }
-.audit ol { padding-left: 20px; margin: 0; }
+.audit summary { cursor: pointer; }
+.audit ol { padding-left: 20px; margin: 12px 0 0; }
 .audit li { margin-bottom: 6px; }
 .audit small { color: var(--muted); }
 .row { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; font-size: 0.9em; }
 .check { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
 .palette { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 8px 0; }
-.legend.sender { color: var(--sender); }
-.legend.recipient { color: var(--recipient); }
-.field-list { margin: 0 0 8px; padding-left: 18px; font-size: 0.9em; }
-.field-list small { color: var(--muted); }
-.problems { padding-left: 18px; color: var(--error); font-size: 0.9em; }
+button.wide { width: 100%; }
+.sidebar .hint { margin: 0 0 8px; }
+.field-key { list-style: none; margin: 0 0 10px; padding: 0; font-size: 0.9em; }
+.field-key li { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.field-key li::before { content: ''; width: 14px; height: 14px; border: 1.5px dashed; border-radius: 2px; }
+.field-key .sender::before { border-color: var(--sender); background: var(--sender-bg); }
+.field-key .recipient::before { border-color: var(--recipient); background: var(--recipient-bg); }
+.problems { margin: 0 0 8px; padding-left: 18px; font-size: 0.9em; }
 .send-form { margin-top: 12px; border-top: 1px solid #eaecf0; padding-top: 12px; }
-.quick-pick { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
-.chip { border-radius: 14px; font-size: 0.85em; padding: 2px 10px; }
 
 /* ---- Page + fields ----
    The page keeps its aspect ratio; fields are absolutely positioned in % of the page.

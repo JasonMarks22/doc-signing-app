@@ -23,7 +23,7 @@ type Drag = {
  * saved once, on pointer-up. That keeps the repository (and the localStorage write) out of
  * the 60-times-a-second mouse-move loop.
  */
-export function LayoutEditor({ doc }: { doc: SigningDocument }) {
+export function LayoutEditor({ doc, onContinue }: { doc: SigningDocument; onContinue: () => void }) {
   const { services, currentUser } = useApp();
   const { error, run } = useAction();
   const source = findSourceDocument(doc.sourceDocumentId)!;
@@ -99,6 +99,13 @@ export function LayoutEditor({ doc }: { doc: SigningDocument }) {
   const update = (patch: Partial<FieldDefinition>) =>
     selected && run(() => svc.updateField(doc.id, currentUser, selected.id, patch));
 
+  function loadPreset() {
+    if (doc.fields.length && !confirmPreset) return setConfirmPreset(true);
+    run(() => svc.applyPreset(doc.id, currentUser));
+    setConfirmPreset(false);
+    setSelectedId(null);
+  }
+
   return (
     <div className="workspace">
       <div className="pages">
@@ -143,6 +150,31 @@ export function LayoutEditor({ doc }: { doc: SigningDocument }) {
 
       <aside className="sidebar">
         <section>
+          {doc.fields.length === 0 ? (
+            <>
+              <h3>Add the fields to complete</h3>
+              {PRESETS[doc.sourceDocumentId] ? (
+                <>
+                  <p className="hint">Quickest: add all the usual fields for this agreement.</p>
+                  <button className="primary wide" onClick={loadPreset}>
+                    Use standard layout
+                  </button>
+                </>
+              ) : (
+                <p className="hint">Add at least one field below.</p>
+              )}
+            </>
+          ) : (
+            <>
+              <FieldSummary fields={doc.fields} />
+              <button className="primary wide" onClick={onContinue}>
+                Next: sign & send →
+              </button>
+            </>
+          )}
+        </section>
+
+        <section>
           <h3>Add a field</h3>
           <label className="row">
             Assign to
@@ -165,26 +197,18 @@ export function LayoutEditor({ doc }: { doc: SigningDocument }) {
           <p className="hint">
             {placing
               ? `Click on the page to place a ${typeLabel(placing)} field.`
-              : 'Pick a type, then click the page. Drag fields to move; drag the corner to resize.'}
+              : 'Pick a type, then click the page. Click a field to edit it, drag to move it, or drag its corner to resize.'}
           </p>
-          {PRESETS[doc.sourceDocumentId] && (
-            <button
-              className="secondary"
-              onClick={() => {
-                if (doc.fields.length && !confirmPreset) return setConfirmPreset(true);
-                run(() => svc.applyPreset(doc.id, currentUser));
-                setConfirmPreset(false);
-                setSelectedId(null);
-              }}
-            >
-              {confirmPreset ? 'Click again to replace all fields' : 'Load standard layout'}
+          {PRESETS[doc.sourceDocumentId] && doc.fields.length > 0 && (
+            <button className="link" onClick={loadPreset}>
+              {confirmPreset ? 'Click again to replace all fields' : 'Reset to standard layout'}
             </button>
           )}
         </section>
 
-        {selected ? (
+        {selected && (
           <section>
-            <h3>Selected field</h3>
+            <h3>Edit field</h3>
             <label className="row">
               Label
               <input value={selected.label} onChange={(e) => update({ label: e.target.value })} />
@@ -240,8 +264,6 @@ export function LayoutEditor({ doc }: { doc: SigningDocument }) {
               Delete field
             </button>
           </section>
-        ) : (
-          <FieldSummary fields={doc.fields} onSelect={setSelectedId} />
         )}
         {error && <p className="error">{error}</p>}
       </aside>
@@ -249,37 +271,13 @@ export function LayoutEditor({ doc }: { doc: SigningDocument }) {
   );
 }
 
-function FieldSummary({
-  fields,
-  onSelect,
-}: {
-  fields: FieldDefinition[];
-  onSelect: (id: string) => void;
-}) {
-  const groups: Party[] = ['sender', 'recipient'];
+/** Doubles as the colour key for the fields on the page. */
+function FieldSummary({ fields }: { fields: FieldDefinition[] }) {
+  const count = (party: Party) => fields.filter((f) => f.assignee === party).length;
   return (
-    <section>
-      <h3>Fields ({fields.length})</h3>
-      {groups.map((g) => (
-        <div key={g}>
-          <h4 className={`legend ${g}`}>{g === 'sender' ? 'Sender' : 'Recipient'}</h4>
-          <ul className="field-list">
-            {fields
-              .filter((f) => f.assignee === g)
-              .map((f) => (
-                <li key={f.id}>
-                  <button className="link" onClick={() => onSelect(f.id)}>
-                    {f.label}
-                  </button>{' '}
-                  <small>
-                    p{f.rect.page + 1} · {typeLabel(f.type)}
-                    {f.required ? ' · required' : ''}
-                  </small>
-                </li>
-              ))}
-          </ul>
-        </div>
-      ))}
-    </section>
+    <ul className="field-key">
+      <li className="sender">Your fields: {count('sender')}</li>
+      <li className="recipient">Recipient's fields: {count('recipient')}</li>
+    </ul>
   );
 }

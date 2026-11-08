@@ -8,7 +8,7 @@ is recorded in a tamper-evident audit trail.
 
 Live demo: https://jasonmarks22.github.io/doc-signing-app/ (auto-deployed by GitHub Actions on every push to `main`).
 
-Requires Node 20+.
+Requires Node 20.19+ or 22.12+.
 
 ```bash
 npm install
@@ -17,11 +17,14 @@ npm test         # service-layer tests (Vitest)
 npm run build    # type-check + production build
 ```
 
-**Quick demo:** as *Alex Rivera* → Create draft → **Load standard layout** → step 2 → click
-the sender signature, type a title → pick *Dana Whitfield* → **Sign & send**. Switch the
-header to *Dana* → open the document → fill the Customer Information → sign → **Finish & sign**.
-Switch to *Sam* to confirm he sees nothing. Tip: open two tabs as two different users;
-they stay in sync through the browser's `storage` event.
+**Quick demo:** as *Alex Rivera* → **Start new agreement** → **Use standard layout** →
+**Next: sign & send** → click the sender signature, type a title → **Sign & send to Dana
+Whitfield** → **Switch to Dana Whitfield to sign** → fill the highlighted fields → sign →
+**Finish & sign**. Switch to *Sam* to confirm the document isn't visible. Tip: open two tabs as
+two different users; they stay in sync through the browser's `storage` event.
+
+Sending is simulated, as the brief allows: the document appears in the recipient's list and no
+email leaves the browser. The README has a requirement-by-requirement test checklist.
 
 ## 2. Architecture overview
 
@@ -88,8 +91,9 @@ src/components/ screens: list, layout editor, fill view, signature modal, audit 
    `complete`, using the logged-in user's name and today's local date.
    Trade-off: the date uses the signer's device clock/time zone.
 
-Smaller choices: drafts are invisible to the recipient; recipients are matched by email (so you
-can send to someone without an account); changing a field's type or assignee clears its value;
+Smaller choices: drafts are invisible to the recipient; the UI picks recipients from the demo
+accounts, so a sent document always reaches someone who can open it (the service matches them by
+email, so a real address book could replace the list); changing a field's type or assignee clears its value;
 dragging updates local preview state and saves once on mouse-up.
 
 **Libraries:** React + TypeScript + Vite (fast default), Vitest (tests share Vite's config).
@@ -144,4 +148,4 @@ tests, and measure field coordinates from the PDF. I reviewed and changed its ou
 - Every keystroke writes to localStorage; fine here, would be debounced against a real API.
 - Audit trail is tamper-evident only (see above). Layout edits in draft are not logged.
 - Tests cover the service and audit chain; no component/E2E tests are committed.
-- The document title can't be edited after creation, and drafts can't be deleted.
+- Documents take their source document's name, and drafts can't be deleted.

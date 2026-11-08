@@ -19,18 +19,23 @@ export function AuditPanel({ doc }: { doc: SigningDocument }) {
     };
   }, [audit, doc, entries]);
 
+  const verified = result !== null && result.chainIntact && result.contentMatchesSigned !== false;
+
   return (
-    <section className="audit">
-      <h3>Audit trail</h3>
-      {result && (
-        <p className={result.chainIntact && result.contentMatchesSigned !== false ? 'ok' : 'error'}>
-          {!result.chainIntact
-            ? `⚠ Tampering detected at entry #${result.brokenAtSeq}`
-            : result.contentMatchesSigned === false
-              ? '⚠ Document content no longer matches what was signed'
-              : `✓ ${entries.length} entries, hash chain verified`}
-        </p>
-      )}
+    // Collapsed by default to keep the screen simple; opens itself if tampering is found.
+    <details className="audit" open={result && !verified ? true : undefined}>
+      <summary>
+        <strong>Audit trail</strong>{' '}
+        {result && (
+          <span className={verified ? 'ok' : 'error'}>
+            {!result.chainIntact
+              ? `⚠ Tampering detected at entry #${result.brokenAtSeq}`
+              : result.contentMatchesSigned === false
+                ? '⚠ Document content no longer matches what was signed'
+                : `✓ ${entries.length} entries, hash chain verified`}
+          </span>
+        )}
+      </summary>
       <ol>
         {entries.map((e) => (
           <li key={e.id}>
@@ -41,6 +46,6 @@ export function AuditPanel({ doc }: { doc: SigningDocument }) {
           </li>
         ))}
       </ol>
-    </section>
+    </details>
   );
 }
