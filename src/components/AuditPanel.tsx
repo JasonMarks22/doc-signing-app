@@ -10,10 +10,14 @@ export function AuditPanel({ doc }: { doc: SigningDocument }) {
   const entries = useAuditEntries(doc.id);
   const [result, setResult] = useState<VerifyResult | null>(null);
 
-  // Re-verify whenever the entries or the document change.
+  // Re-verify whenever the entries or the document change. Wait for queued appends first, so
+  // a document that was just sent/completed isn't checked before its entry is written.
   useEffect(() => {
     let cancelled = false;
-    audit.verify(doc).then((r) => !cancelled && setResult(r));
+    audit
+      .whenIdle()
+      .then(() => audit.verify(doc))
+      .then((r) => !cancelled && setResult(r));
     return () => {
       cancelled = true;
     };
@@ -28,11 +32,13 @@ export function AuditPanel({ doc }: { doc: SigningDocument }) {
         <strong>Audit trail</strong>{' '}
         {result && (
           <span className={verified ? 'ok' : 'error'}>
-            {!result.chainIntact
+            {result.brokenAtSeq !== null
               ? `⚠ Tampering detected at entry #${result.brokenAtSeq}`
-              : result.contentMatchesSigned === false
-                ? '⚠ Document content no longer matches what was signed'
-                : `✓ ${entries.length} entries, hash chain verified`}
+              : result.missing.length > 0
+                ? `⚠ Audit entries are missing (${result.missing.map((t) => t.replace('document.', '')).join(', ')})`
+                : result.contentMatchesSigned === false
+                  ? '⚠ Document content no longer matches what was signed'
+                  : `✓ ${entries.length} entries, hash chain verified`}
           </span>
         )}
       </summary>

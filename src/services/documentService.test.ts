@@ -125,6 +125,7 @@ describe('audit trail', () => {
     expect(await s.audit.verify(doc)).toEqual({
       chainIntact: true,
       brokenAtSeq: null,
+      missing: [],
       contentMatchesSigned: true,
     });
 
@@ -134,5 +135,29 @@ describe('audit trail', () => {
     s.store.set(AUDIT_KEY, JSON.stringify(raw));
     const fresh = createServices(s.store);
     expect((await fresh.audit.verify(doc)).brokenAtSeq).toBe(2);
+  });
+
+  it('detects entries deleted from the end of the chain', async () => {
+    const { id, byLabel } = readyDraft();
+    s.documents.send(id, alex, toDana);
+    fillRecipient(id, byLabel);
+    s.documents.complete(id, dana);
+    await s.audit.whenIdle();
+    const doc = s.repo.get(id)!;
+
+    // Deleting the last entry leaves a chain whose remaining hashes all still check out.
+    const raw = JSON.parse(s.store.get(AUDIT_KEY)!) as AuditEntry[];
+    s.store.set(AUDIT_KEY, JSON.stringify(raw.slice(0, -1)));
+    const result = await createServices(s.store).audit.verify(doc);
+    expect(result.chainIntact).toBe(false);
+    expect(result.missing).toEqual(['document.completed']);
+
+    // Wiping the whole trail is caught the same way.
+    s.store.set(AUDIT_KEY, '[]');
+    expect((await createServices(s.store).audit.verify(doc)).missing).toEqual([
+      'document.created',
+      'document.sent',
+      'document.completed',
+    ]);
   });
 });

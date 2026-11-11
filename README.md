@@ -53,10 +53,12 @@ hash-chained audit trail.
 - Links entries into a per-document SHA-256 hash chain, verified on the document screen.
 - Fingerprints the fields and values at sending and completion, so changes made after signing
   are detected.
+- Checks the trail against the document's own state, so deleted entries are reported too.
 
 **Multi-user demo in one browser**
 - Switch people from the "You are" menu in the header, or with the one-click button after sending.
 - Open two tabs as different users and they stay in sync through the browser's `storage` event.
+  Each tab remembers its own user when refreshed.
 - Documents and the audit trail persist across page refreshes.
 
 ## Getting started
@@ -172,9 +174,9 @@ public/documents/master-agreement/    Source PDF and pre-rendered page images
 
 ## Testing and deployment
 
-The Vitest suite targets the service layer, where the rules are enforced. Its eight tests cover
+The Vitest suite targets the service layer, where the rules are enforced. Its nine tests cover
 document visibility, sending requirements, auto-fill, layout locking, recipient permissions,
-completion validation and audit-trail tamper detection.
+completion validation, and audit-trail tamper and deletion detection.
 
 GitHub Actions runs the tests and build on every push to `main`, then publishes the site to
 GitHub Pages.
@@ -199,4 +201,3 @@ GitHub Pages.
 
 - **[WRITEUP.md](WRITEUP.md):** architecture, trade-offs, the audit-trail design and how AI was
   used in the project.
-- **[LEARNING.md](LEARNING.md):** a guided tour of the code, following one action end to end.

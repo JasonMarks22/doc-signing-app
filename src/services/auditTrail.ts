@@ -32,6 +32,11 @@ export interface VerifyResult {
   chainIntact: boolean;
   /** seq of the first entry whose hash doesn't check out. */
   brokenAtSeq: number | null;
+  /**
+   * Events the document's own state says happened (e.g. it is completed) but that have no
+   * entry. Catches entries deleted from the end of the chain, which hash links alone can't.
+   */
+  missing: DomainEvent['type'][];
   /** For completed docs: does the stored document still match what was signed? */
   contentMatchesSigned: boolean | null;
 }
@@ -85,15 +90,17 @@ export class AuditTrail {
     for (const entry of entries) {
       const expected = await hashEntry({ ...entry, prevHash: prev });
       if (entry.prevHash !== prev || entry.hash !== expected) {
-        return { chainIntact: false, brokenAtSeq: entry.seq, contentMatchesSigned: null };
+        return { chainIntact: false, brokenAtSeq: entry.seq, missing: [], contentMatchesSigned: null };
       }
       prev = entry.hash;
     }
+    const recorded = new Set(entries.map((e) => e.type));
+    const missing = expectedEvents(doc).filter((t) => !recorded.has(t));
     const signed = [...entries].reverse().find((e) => e.type === 'document.completed');
     const contentMatchesSigned = signed
       ? signed.contentHash === (await hashContent({ fields: doc.fields, values: doc.values }))
       : null;
-    return { chainIntact: true, brokenAtSeq: null, contentMatchesSigned };
+    return { chainIntact: missing.length === 0, brokenAtSeq: null, missing, contentMatchesSigned };
   }
 
   // ---------- internals ----------
@@ -134,6 +141,15 @@ export class AuditTrail {
     this.byDoc.clear();
     if (notify) this.listeners.forEach((l) => l());
   }
+}
+
+/** The lifecycle events a document in this state must have been through. */
+function expectedEvents(doc: SigningDocument): DomainEvent['type'][] {
+  const types: DomainEvent['type'][] = ['document.created'];
+  if (doc.sentAt) types.push('document.sent');
+  if (doc.viewedAt) types.push('document.viewed');
+  if (doc.completedAt) types.push('document.completed');
+  return types;
 }
 
 function summarize(event: DomainEvent): string {

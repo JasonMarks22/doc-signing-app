@@ -28,17 +28,32 @@ interface AppContextValue {
 const Ctx = createContext<AppContextValue | null>(null);
 const SESSION_KEY = 'docsign:currentUser';
 
+/**
+ * The "logged in" user is per TAB (sessionStorage), not shared like the documents
+ * (localStorage), so two tabs can act as two people and keep their identity on refresh.
+ */
+function readSessionUser(): string | null {
+  try {
+    return window.sessionStorage.getItem(SESSION_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function writeSessionUser(id: string) {
+  try {
+    window.sessionStorage.setItem(SESSION_KEY, id);
+  } catch {
+    // Storage unavailable (e.g. privacy mode): the choice just won't survive a refresh.
+  }
+}
+
 export function AppProvider({ services, children }: { services: Services; children: ReactNode }) {
-  const [userId, setUserId] = useState(
-    () => services.store.get(SESSION_KEY) ?? USERS[0].id,
-  );
-  const switchUser = useCallback(
-    (id: string) => {
-      services.store.set(SESSION_KEY, id);
-      setUserId(id);
-    },
-    [services],
-  );
+  const [userId, setUserId] = useState(() => readSessionUser() ?? USERS[0].id);
+  const switchUser = useCallback((id: string) => {
+    writeSessionUser(id);
+    setUserId(id);
+  }, []);
   const currentUser = findUser(userId) ?? USERS[0];
   const value = useMemo(
     () => ({ services, currentUser, switchUser }),

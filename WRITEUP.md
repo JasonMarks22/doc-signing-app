@@ -96,7 +96,8 @@ accounts, so a sent document always reaches someone who can open it (the service
 email, so a real address book could replace the list); changing a field's type or assignee clears its value;
 dragging updates local preview state and saves once on mouse-up.
 
-**Libraries:** React + TypeScript + Vite (fast default), Vitest (tests share Vite's config).
+**Libraries:** React + TypeScript + Vite (fast default), Vitest (tests share Vite's config),
+oxlint (fast linting, no config).
 Nothing else: a hash router, signature canvas and pub/sub were each a few dozen lines, which
 was cheaper than learning and justifying a dependency.
 
@@ -107,7 +108,9 @@ with who, what and when. Each entry stores the SHA-256 hash of the previous entr
 forming a chain per document. "Sent" and "completed" entries also store a fingerprint of the
 fields and values at that moment. The document screen verifies the chain and shows
 "✓ hash chain verified" or which entry was tampered with, and whether the completed document
-still matches what was signed.
+still matches what was signed. Hash links alone can't notice entries deleted from the *end* of
+the chain, so verification also checks the trail against the document's own timestamps: a
+completed document with no "completed" entry is reported as missing entries.
 
 **Why:** for a signing product the history *is* the product. "Who signed what, and when" is the
 first question in any dispute, and an editable log is worthless as evidence. It also forced a
@@ -129,20 +132,26 @@ or signed with a server key.
 I used Claude to scaffold the project, generate first drafts of the service, components and
 tests, and measure field coordinates from the PDF. I reviewed and changed its output, for example:
 
-- **Rejected** constructor "parameter properties" (`constructor(private store: …)`): the project's
-  `erasableSyntaxOnly` TypeScript setting forbids them, so I switched to explicit fields.
+- **Changed** how sending works after trying the app myself. Claude's first version had free-text
+  Name and Email boxes for the recipient, so I could send to an address nobody in the demo could
+  log in as, and the document disappeared. I replaced them with a list of the demo accounts and
+  added a one-click "Switch to [recipient] to sign" button, so the send → sign flow can't dead-end.
+- **Overrode** Claude's recommendation when I had it review the finished app against the brief.
+  It listed "a custom layout can be sent without a signature" as worth fixing. Because of time
+  constraints, I documented the gap under What's unfinished instead of changing the code.
 - **Rejected** a hook that filtered documents with a `void all` trick to force re-computation. I
   replaced it with one pure `visibleTo(docs, user)` rule shared by the service and the hook, so
   "who can see what" is defined in exactly one place.
 - **Chose** page images over the suggested `react-pdf` setup to cut setup risk in a 90-minute box.
 - Measured the preset coordinates from the actual PDF text positions instead of eyeballing them.
 
-<!-- TODO (Jason): add one example of your own from reviewing the code, in your own words. -->
-
 ## 6. What's unfinished
 
 - No upload of new PDFs; only the catalog's Master Agreement (plus the render step).
 - No decline/void/expire statuses, reminders or due dates.
+- A signature isn't guaranteed on custom layouts: nothing requires each party to have a signature
+  field, and "required" can be unticked on one, so such a document could be sent or completed
+  unsigned. The standard layout requires both signatures.
 - No downloadable signed PDF (flattening values into the PDF).
 - Placement is click-to-place only (no drag from the palette, no snapping, no undo, no keyboard).
 - Every keystroke writes to localStorage; fine here, would be debounced against a real API.
