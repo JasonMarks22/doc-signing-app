@@ -4,6 +4,9 @@ A simplified DocuSign: a sender places fields on the Master Agreement, fills and
 side, issues it to a recipient, and the recipient fills, signs and completes it. Every step
 is recorded in a tamper-evident audit trail.
 
+**Time:** I built the app in the 90-minute time box. Later commits simplify the signing flow,
+expand the docs and fix two bugs found in review (deleted audit entries and per-tab users).
+
 ## 1. How to run it
 
 Live demo: https://jasonmarks22.github.io/doc-signing-app/ (auto-deployed by GitHub Actions on every push to `main`).
